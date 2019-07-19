@@ -1,0 +1,183 @@
+*** Settings ***
+Library           Selenium2Library
+Library           Process
+Library           Make_Excel
+Variables         ../Lib/site-packages/Make_Excel.py
+Variables         ../Lib/site-packages/file_check.py
+Library           ../Lib/site-packages/file_check.py
+Library           DateTime
+Resource          ../Lib/site-packages/variable_value.txt
+Library           Make_Excel2
+Library           file_check2
+Library           contentprovider_History_2
+Library           Content_Provider_history_psv
+Library           campaignhistory
+Library           ../Lib/site-packages/ContentProvider.py
+Library           Selenium2Library
+Library           contentprovider_History
+Library           psv_file_compare
+Library           Content_providerHistory_PSV
+Library           campaignhistory_PSV
+
+*** Variables ***
+${response}       None
+${response1}      None
+&{error_msg}      msg1=Dates cannot be empty.    msg2=From Date cannot be greater than To Date.
+${msg_greaterdates}    None
+${from_date}      02/13/2019
+${to_date}        03/06/2019
+
+*** Test Cases ***
+Verify that all previous report will be deleted
+    file_check2.file_check    ${download_loc}
+
+Verify that driver launch will be successful
+    Open Browser    https://sdg-3ge.sero.gic.ericsson.se/tpim/    \ chrome
+    Maximize Browser Window
+
+Verify that login to the Customer Care Portal will be successful
+    ${Window1Title}=    Get Title
+    Log    ${Window1Title}
+    Select Frame    iframe
+    Set Selenium Implicit Wait    30
+    Click Element    id=username
+    Input Text    id=username    manager
+    Click Element    id=password
+    Clear Element Text    id=password
+    Input Text    id=password    manager
+    Click Element    id=loginButton
+
+Verify that navigation to report page will be successful
+    Select Frame    iframe
+    Select Frame    menuFrame
+    click Element    //a[@id='cacReportLink']
+    Set Selenium Implicit Wait    30
+    Unselect Frame
+    Select Frame    iframe
+    Select Frame    mainFrame
+
+Verify that navigation to campaign report will be successful
+    sleep    5
+    Click Element    //select[@id='selectReportName']/option[text()='Campaign Report']
+    Click Element    //input[@value='Generate Report']
+    Set Selenium Implicit Wait    30
+
+Verify that download of campaign report will be successful
+    sleep    5
+    Execute JavaScript    document.getElementById('exportToexcel').click()
+    Set Selenium Implicit Wait    45
+    Execute JavaScript    document.getElementById('exportTopsv').click()
+    Set Selenium Implicit Wait    45
+    Sleep    10
+
+Verify that navigation to short code report will be successful
+    Go Back
+    Select Frame    iframe
+    Select Frame    menuFrame
+    click Element    //a[@id='cacReportLink']
+    Set Selenium Implicit Wait    5
+    Unselect Frame
+    Select Frame    iframe
+    Select Frame    mainFrame
+    Click Element    //select[@id='selectReportName']/option[text()='Short Code Report']
+    Click Element    //input[@value='Generate Report']
+    Set Selenium Implicit Wait    20
+
+Verify that download of short report will be successful
+    sleep    5
+    Execute JavaScript    document.getElementById('exportToexcel').click()
+    Set Selenium Implicit Wait    45
+    Execute JavaScript    document.getElementById('exportTopsv').click()
+    Set Selenium Implicit Wait    45
+    Sleep    10
+
+Verify that navigation to campaign history report will be successful
+    Go Back
+    Select Frame    iframe
+    Select Frame    menuFrame
+    click Element    //a[@id='cacReportLink']
+    Set Selenium Implicit Wait    30
+    Unselect Frame
+    Select Frame    iframe
+    Select Frame    mainFrame
+    Click Element    //*[@id="selectReportName"]/option[8]
+    Click Element    //*[@id="reportSelectDateRangeToDiv"]/img
+    Click Element    //*[@id="ui-datepicker-div"]/div/a[1]/span
+    Click Element    //*[@id="ui-datepicker-div"]/table/tbody/tr[3]/td[4]/a
+    Click Element    //*[@id="reportSelectDateRangeFromDiv"]/img
+    Click Element    //*[@id="ui-datepicker-div"]/div/a[1]/span
+    Click Element    //*[@id="ui-datepicker-div"]/table/tbody/tr[2]/td[3]/a
+    Click Element    //div[@id='createReport']
+    Set Selenium Implicit Wait    30
+    Execute JavaScript    document.getElementById('j_id243136558_e7df97c').onclick()
+    ${from_date}    Get Text    id=filterSelectDateRangeFrom
+    ${to_date}    Get Text    id=filterSelectDateRangeTo
+    Log    ${from_date}
+    Log    ${to_date}
+
+Verify that download of campaign history report will be successful
+    Execute JavaScript    document.getElementById('exportToexcel').click()
+    Set Selenium Implicit Wait    30
+    Execute JavaScript    document.getElementById('exportTopsv').click()
+    Set Selenium Implicit Wait    30
+    sleep    10
+
+Verify that when dates are empty for from & to error should be thrown
+    Go Back
+    Select Frame    iframe
+    Select Frame    menuFrame
+    click Element    //a[@id='cacReportLink']
+    Set Selenium Implicit Wait    30
+    Unselect Frame
+    Select Frame    iframe
+    Select Frame    mainFrame
+    Click Element    //*[@id="selectReportName"]/option[8]
+    Execute JavaScript    document.getElementById('j_id243136558_e7df97c').onclick()
+    sleep    5
+    ${msg_emptydates}    Get Text    id=formErrorMessage
+    Should Be Equal    ${msg_emptydates}    &{error_msg}[msg1]
+
+Verify that when to date is greater than from date error should be thrown
+    Comment    Go Back
+    Comment    Select Frame    iframe
+    Comment    Select Frame    menuFrame
+    Comment    click Element    //a[@id='cacReportLink']
+    Comment    Set Selenium Implicit Wait    30
+    Comment    Unselect Frame
+    Comment    Select Frame    iframe
+    Comment    Select Frame    mainFrame
+    Click Element    //*[@id="selectReportName"]/option[8]
+    Click Element    //*[@id="reportSelectDateRangeToDiv"]/img
+    Click Element    //*[@id="ui-datepicker-div"]/div/a[1]/span
+    Click Element    //*[@id="ui-datepicker-div"]/table/tbody/tr[2]/td[3]/a
+    Click Element    //*[@id="reportSelectDateRangeFromDiv"]/img
+    Click Element    //*[@id="ui-datepicker-div"]/div/a[1]/span
+    Click Element    //*[@id="ui-datepicker-div"]/table/tbody/tr[3]/td[4]/a
+    Click Element    //div[@id='createReport']
+    Set Selenium Implicit Wait    30
+    Execute JavaScript    document.getElementById('j_id243136558_e7df97c').onclick()
+    sleep    5
+    ${msg_greaterdates}    Get Text    id=formErrorMessage1
+    Should Be Equal    ${msg_greaterdates}    &{error_msg}[msg2]
+    Unselect Frame
+    Select Frame    iframe
+    Select Frame    topFrame
+    Click Element    //*[@id="headerBottom"]/div/span[2]
+    Click Element    //*[@id="logoutLink3Pi"]
+
+Verify that creating Database Connection will be successful
+    sleep    5
+    Make_Excel2.DIRCHECK
+    Make_Excel2.connection    ${db_value}    ${download_loc}
+
+Verify the Excel and DB comparison for campaign Report
+    sleep    10
+    Make_Excel2.file location
+
+Verify the Excel and DB comparison for Campaign History Report
+    sleep    10
+    campaignhistory.campaignhistory    ${db_value1}    ${download_loc}    ${from_date}    ${to_date}
+
+Verify the PSV and DB comparison for campaign Report
+    sleep    10
+    psv_file_compare.file_comp    ${db_value}    ${download_loc}
